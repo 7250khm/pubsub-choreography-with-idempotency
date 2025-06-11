@@ -31,8 +31,8 @@ public class Inventory  {
     public static void stockDecrease(DeliveryStarted deliveryStarted){
 
         //FOCUS: 멱등성 관리. 한번 처리된 적이 있다면 스킵. handle idempotent: once processed, skip the process:
-        // if(Transaction.repository().findById(Long.valueOf(deliveryStarted.getOrderId())).isPresent())
-        //  return;
+         if(Transaction.repository().findById(Long.valueOf(deliveryStarted.getOrderId())).isPresent())
+          return;
 
         repository().findById(Long.valueOf(deliveryStarted.getProductId())).ifPresent(inventory->{
             
@@ -60,7 +60,7 @@ public class Inventory  {
     }
     
     public static void compensate(DeliveryCancelled deliveryCancelled){
-        // Transaction.repository().findById(Long.valueOf(deliveryCancelled.getOrderId())).ifPresentOrElse(tx ->{
+         Transaction.repository().findById(Long.valueOf(deliveryCancelled.getOrderId())).ifPresentOrElse(tx ->{
             repository().findById(Long.valueOf(deliveryCancelled.getProductId())).ifPresent(inventory->{
                 
                 inventory.setStock(inventory.getStock() + deliveryCancelled.getQty()); // do something
@@ -70,10 +70,10 @@ public class Inventory  {
                 new StockIncreased(inventory).publish();
 
             });
-        // }
-        //  ,()->{
-        //      throw new RuntimeException("Compensation failed due to stock");
-        //  }
-        // );
+         }
+          ,()->{
+              throw new RuntimeException("Compensation failed due to stock");
+          }
+         );
     }
 }
